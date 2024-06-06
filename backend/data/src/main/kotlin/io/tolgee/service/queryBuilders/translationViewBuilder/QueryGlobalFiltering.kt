@@ -4,15 +4,19 @@ import io.tolgee.dtos.request.translation.TranslationFilters
 import io.tolgee.model.key.KeyMeta_
 import io.tolgee.model.key.Key_
 import io.tolgee.model.key.Tag_
+import io.tolgee.model.key.UnsuccessfulJobKey
+import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.JoinType
 import jakarta.persistence.criteria.Predicate
+import jakarta.persistence.criteria.Subquery
 import java.util.*
 
 class QueryGlobalFiltering(
   private val params: TranslationFilters,
   private val queryBase: QueryBase<*>,
   private val cb: CriteriaBuilder,
+  private val entityManager: EntityManager,
 ) {
   fun apply() {
     filterTag()
@@ -24,6 +28,21 @@ class QueryGlobalFiltering(
     filterHasScreenshot()
     filterHasNoScreenshot()
     filterSearch()
+    filterFailedTargets()
+  }
+
+  private fun filterFailedTargets() {
+    if (params.filterFailedKeysOfJob != null) {
+      entityManager.createNativeQuery("select from create_unsuccessful_job_keys_temp(:jobId)")
+        .setParameter("jobId", params.filterFailedKeysOfJob)
+        .executeUpdate()
+      val subquery: Subquery<Long> = queryBase.query.subquery(Long::class.java)
+      val unsuccessfulJobKey = subquery.from(UnsuccessfulJobKey::class.java)
+      subquery.select(unsuccessfulJobKey.get("keyId"))
+      queryBase.whereConditions.add(
+        queryBase.keyIdExpression.`in`(subquery),
+      )
+    }
   }
 
   private fun filterSearch() {

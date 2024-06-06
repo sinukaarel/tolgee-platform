@@ -9,6 +9,7 @@ import io.tolgee.model.Permission
 import io.tolgee.model.Project
 import io.tolgee.model.Screenshot
 import io.tolgee.model.automations.Automation
+import io.tolgee.model.batch.BatchJob
 import io.tolgee.model.contentDelivery.ContentDeliveryConfig
 import io.tolgee.model.contentDelivery.ContentStorage
 import io.tolgee.model.dataImport.Import
@@ -56,6 +57,7 @@ class ProjectBuilder(
     var contentDeliveryConfigs = mutableListOf<ContentDeliveryContentBuilder>()
     var webhookConfigs = mutableListOf<WebhookConfigBuilder>()
     var importSettings: ImportSettings? = null
+    val batchJobs: MutableList<BatchJobBuilder> = mutableListOf()
   }
 
   var data = DATA()
@@ -174,6 +176,8 @@ class ProjectBuilder(
   fun addContentDeliveryConfig(ft: FT<ContentDeliveryConfig>) = addOperation(data.contentDeliveryConfigs, ft)
 
   fun addWebhookConfig(ft: FT<WebhookConfig>) = addOperation(data.webhookConfigs, ft)
+
+  fun addBatchJob(ft: FT<BatchJob>) = addOperation(data.batchJobs, ft)
 
   fun setImportSettings(ft: FT<ImportSettings>) {
     data.importSettings = ImportSettings(this.self).apply(ft)
